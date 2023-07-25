@@ -1,0 +1,18 @@
+﻿{
+    "version": 3,
+    "configurePresets": [
+      {
+        "name": "AVR-C",
+        "displayName": "AVR",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/out/build/${presetName}",
+        "installDir": "${sourceDir}/out/install/${presetName}",
+        "cacheVariables": {
+          "CMAKE_SYSTEM_NAME": "Generic",
+          "CMAKE_ASM_COMPILER": "avr-gcc.exe",
+          "CMAKE_C_COMPILER": "avr-gcc.exe",
+          "CMAKE_CXX_COMPILER": "avr-g++.exe"
+        }
+      }
+    ]
+}
