@@ -24,7 +24,7 @@ void irq_callback(IOPort8 *port8, uint8_t localInd)
 	}
 	else
 	{
-		if (io.get_falling(TURN_RESET) && ((time - lastResetTime) > 15 || time < lastResetTime)) // actually rising but relative to gound
+		if (io.get_falling(TURN_RESET) && ((time - lastResetTime) > 15 || time < lastResetTime)) // actually rising but relative to ground
 		{
 			lastResetTime = time;
 			if (turn == TurnSignal::Emergency)
@@ -44,7 +44,7 @@ void irq_callback(IOPort8 *port8, uint8_t localInd)
 			// start hold timer
 			TCCR0B = T0_CLK;
 		}
-		else if (io.get_rising(TURN_RESET) && ((time - lastResetTime) > 15 || time < lastResetTime)) // actually falling but relative to gound
+		else if (io.get_rising(TURN_RESET) && ((time - lastResetTime) > 15 || time < lastResetTime)) // actually falling but relative to ground
 		{
 			lastResetTime = time;
 			TCCR0B = 0; // stop timer
