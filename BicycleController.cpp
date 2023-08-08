@@ -9,15 +9,65 @@ IOPort io = io_port_default;
 volatile TurnSignal turn;
 volatile uint64_t time = 0;
 volatile uint8_t currentEmergency = EMERGENCY_HAZARD;
+volatile uint8_t currentDebug = DEBUG_ALL;
 volatile uint8_t holdCounter = 0;
 volatile uint64_t lastResetTime = 0;
+
+void rot_left()
+{
+	if (turn == TurnSignal::Debug)
+	{
+		if (currentDebug == 0)
+		{
+			currentDebug = DEBUG__LAST;
+		}
+		else
+		{
+			currentDebug--;
+		}
+	}
+	else
+	{
+		turn = TurnSignal::Left;
+	}
+}
+
+void rot_right()
+{
+	if (turn == TurnSignal::Debug)
+	{
+		if (++currentDebug > DEBUG__LAST)
+		{
+			currentDebug = 0;
+		}
+	}
+	else
+	{
+		turn = TurnSignal::Right;
+	}
+}
+
+void debug_init_sequence()
+{
+	bool v;
+	for (uint8_t i = 0; i < 15; i++)
+	{
+		v = i % 2 == 0;
+		io.put(LED_MAIN, v);
+		io.put(LED_LEFT, !v);
+		io.put(LED_RIGHT, !v);
+		io.put(LED_LEFT_IND, v);
+		io.put(LED_RIGHT_IND, v);
+		_delay_ms(60);
+	}
+}
 
 void irq_callback(IOPort8 *port8, uint8_t localInd)
 {
 	// get IOPort32 index of IRQ
 	uint8_t i = io.getPinIndex(port8, localInd);
 
-	if (i == BRAKE_SWITCH)
+	if (i == BRAKE_SWITCH && turn != TurnSignal::Debug) // disable all controls in debug mode
 	{
 		// set led value to brake switch
 		io.put(LED_MAIN, io.get(BRAKE_SWITCH));
@@ -26,6 +76,14 @@ void irq_callback(IOPort8 *port8, uint8_t localInd)
 	{
 		if (io.get_falling(TURN_RESET) && ((time - lastResetTime) > 15 || time < lastResetTime)) // actually rising but relative to ground
 		{
+			static uint8_t debugModeCounter = 0;
+			if (turn != TurnSignal::Debug && ((time - lastResetTime) < 60 || time < lastResetTime) && ++debugModeCounter > 10)
+			{
+				debugModeCounter = 0;
+				turn = TurnSignal::Debug;
+				debug_init_sequence();
+			}
+
 			lastResetTime = time;
 			if (turn == TurnSignal::Emergency)
 			{
@@ -36,7 +94,7 @@ void irq_callback(IOPort8 *port8, uint8_t localInd)
 					currentEmergency = 0;
 				}
 			}
-			else
+			else if (turn != TurnSignal::Debug)
 			{
 				turn = TurnSignal::Off;
 			}
@@ -70,13 +128,13 @@ void irq_callback(IOPort8 *port8, uint8_t localInd)
 				{
 					desync_counter = 0; // resync
 					time = 0;
-					turn = TurnSignal::Left;
+					rot_left();
 				}
 				else if (desync_counter > 1)
 				{
 					desync_counter = 0; // resync
 					time = 0;
-					turn = TurnSignal::Right;
+					rot_right();
 				}
 			}
 
@@ -94,7 +152,7 @@ ISR(TIMER0_OVF_vect)
 		TCNT0 = 0;	// reset counter
 		holdCounter = 0;
 
-		if (turn == TurnSignal::Emergency)
+		if (turn == TurnSignal::Emergency || turn == TurnSignal::Debug)
 		{
 			turn = TurnSignal::Off;
 		}
@@ -229,6 +287,88 @@ int main()
 			break;
 			}
 			break;
+		case TurnSignal::Debug:
+			switch (currentDebug)
+			{
+			case DEBUG_ALL:
+				io.put(LED_MAIN, true);
+				io.put(LED_LEFT, false);
+				io.put(LED_LEFT_IND, true);
+				io.put(LED_RIGHT, false);
+				io.put(LED_RIGHT_IND, true);
+				break;
+			case DEBUG_MAIN:
+				io.put(LED_MAIN, true);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			case DEBUG_LEFT_LIGHT:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, false);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			case DEBUG_RIGHT_LIGHT:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, false);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			case DEBUG_LEFT_IND:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, true);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			case DEBUG_RIGHT_IND:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, true);
+				break;
+			case DEBUG_LEFT:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, false);
+				io.put(LED_LEFT_IND, true);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			case DEBUG_RIGHT:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, false);
+				io.put(LED_RIGHT_IND, true);
+				break;
+			case DEBUG_BACK:
+				io.put(LED_MAIN, true);
+				io.put(LED_LEFT, false);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, false);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			case DEBUG_FRONT:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, true);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, true);
+				break;
+			case DEBUG_NONE:
+				io.put(LED_MAIN, false);
+				io.put(LED_LEFT, true);
+				io.put(LED_LEFT_IND, false);
+				io.put(LED_RIGHT, true);
+				io.put(LED_RIGHT_IND, false);
+				break;
+			}
+			break;
 		}
 		_delay_ms(1);
 		time++;
@@ -241,8 +381,11 @@ int main()
 			holdCounter = 0;
 		}
 
-		// set led value to brake switch
-		io.put(LED_MAIN, io.get(BRAKE_SWITCH));
+		if (turn != TurnSignal::Debug)
+		{
+			// set led value to brake switch
+			io.put(LED_MAIN, io.get(BRAKE_SWITCH));
+		}
 	}
 
 	return 0;

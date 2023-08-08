@@ -19,13 +19,27 @@ enum class TurnSignal
     Off,
     Left,
     Right,
-    Emergency
+    Emergency,
+    Debug // turn on all lights
 };
 
 #define EMERGENCY_HAZARD 0
 #define EMERGENCY_PULSE 1
 #define EMERGENCY_SOS 2
 #define EMERGENCY__LAST EMERGENCY_SOS
+
+#define DEBUG_ALL 0
+#define DEBUG_MAIN 1
+#define DEBUG_LEFT_LIGHT 2
+#define DEBUG_RIGHT_LIGHT 3
+#define DEBUG_LEFT_IND 4
+#define DEBUG_RIGHT_IND 5
+#define DEBUG_LEFT 6
+#define DEBUG_RIGHT 7
+#define DEBUG_BACK 8
+#define DEBUG_FRONT 9
+#define DEBUG_NONE 10
+#define DEBUG__LAST DEBUG_NONE
 
 #define T0_CLK CLK_1024
 
