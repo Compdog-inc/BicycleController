@@ -77,11 +77,18 @@ void irq_callback(IOPort8 *port8, uint8_t localInd)
 		if (io.get_falling(TURN_RESET) && ((time - lastResetTime) > 15 || time < lastResetTime)) // actually rising but relative to ground
 		{
 			static uint8_t debugModeCounter = 0;
-			if (turn != TurnSignal::Debug && ((time - lastResetTime) < 60 || time < lastResetTime) && ++debugModeCounter > 10)
+			if (io.get(BRAKE_SWITCH))
+			{
+				if (turn != TurnSignal::Debug && ((time - lastResetTime) < 60 || time < lastResetTime) && ++debugModeCounter > 10)
+				{
+					debugModeCounter = 0;
+					turn = TurnSignal::Debug;
+					debug_init_sequence();
+				}
+			}
+			else
 			{
 				debugModeCounter = 0;
-				turn = TurnSignal::Debug;
-				debug_init_sequence();
 			}
 
 			lastResetTime = time;
