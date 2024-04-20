@@ -25,7 +25,8 @@ enum class TurnSignal
 
 #define EMERGENCY_HAZARD 0
 #define EMERGENCY_PULSE 1
-#define EMERGENCY_SOS 2
+#define EMERGENCY_ALL 2
+#define EMERGENCY_SOS 3
 #define EMERGENCY__LAST EMERGENCY_SOS
 
 #define DEBUG_ALL 0

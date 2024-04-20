@@ -282,6 +282,28 @@ int main()
 				io.put(LED_RIGHT_IND, blinkState);
 			}
 			break;
+			case EMERGENCY_ALL:
+			{
+				uint64_t cycle = time % 500;
+				blinkState = IN_RANGE(cycle, 0, 100) || IN_RANGE(cycle, 150, 250);
+				io.put(LED_MAIN, blinkState);
+				blinkState = IN_RANGE(cycle % 250, 0, 100) || IN_RANGE(cycle % 250, 150, 250);
+				if (cycle < 250)
+				{
+					io.put(LED_LEFT, !blinkState);
+					io.put(LED_LEFT_IND, blinkState);
+					io.put(LED_RIGHT, true);
+					io.put(LED_RIGHT_IND, false);
+				}
+				else
+				{
+					io.put(LED_LEFT, true);
+					io.put(LED_LEFT_IND, false);
+					io.put(LED_RIGHT, !blinkState);
+					io.put(LED_RIGHT_IND, blinkState);
+				}
+			}
+			break;
 			case EMERGENCY_SOS:
 			{
 				uint64_t cycle = time % 1700;

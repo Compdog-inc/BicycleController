@@ -33,10 +33,10 @@ set(CMAKE_EXE_LINKER_FLAGS -mmcu=${MCU})
 
 target_include_directories(BicycleController PUBLIC
   "C:/Program Files/avr8-gnu-toolchain/avr/include/"
-  C:/Users/Vladimir/source/include/avr/
+  E:/source/include/avr/
 )
 
-target_link_libraries(BicycleController "C:/Users/Vladimir/source/include/avr/shared/lib/libusart.a")
+target_link_libraries(BicycleController "E:/source/include/avr/shared/lib/libusart.a")
 
 add_compile_options(
     -mmcu=${MCU}
